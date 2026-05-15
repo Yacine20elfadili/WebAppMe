@@ -1,0 +1,46 @@
+# --- INFRASTRUCTURE DEFINITION ---
+# Version 3.8 is the standard for modern Docker Engine features
+version: '3.8'
+
+services:
+
+  # --- SERVICE 1: THE BACKEND (API) ---
+  backend:
+    # 1) Image: Pulls the pre-built logic from the registry (No local build needed)
+    # image: yacine5fadili/webappme-backend:v1.0.2
+    image: yacine5fadili/webappme-backend:latest
+    container_name: production-backend
+    
+    # 2) Networking: Maps host port 3001 to container port 3001
+    ports:
+      - "3001:3001"
+    
+    # 3) Resiliency: Automatically restarts if the process crashes or the server reboots
+    restart: always 
+    
+    # 4) Environment: Configures the app for high-performance production mode
+    environment:
+      - NODE_ENV=production
+
+  # --- SERVICE 2: THE FRONTEND (NGINX PROXY) ---
+  frontend:
+    # image: yacine5fadili/webappme-frontend:v1.0.2
+    image: yacine5fadili/webappme-frontend:latest
+    container_name: production-frontend
+    
+    # 5) Networking: The standard entry point for web traffic (HTTP)
+    ports:
+      - "80:80"
+    
+    # 6) Resiliency: Ensures consistent uptime
+    restart: always
+    
+    # 7) Logic: Prevents the frontend from starting until the backend container exists
+    depends_on:
+      - backend
+
+    # 8) DATA INJECTION (The "Ops" Trick):
+    # This mounts your external routing rules (default.conf) into the container.
+    # It overrides the default Nginx config to enable the Reverse Proxy bridge.
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf

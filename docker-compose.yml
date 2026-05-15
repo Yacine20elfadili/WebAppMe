@@ -1,0 +1,39 @@
+# Defines all the containers that make up your app.
+# Each item under here is one container.
+services:
+
+  # --- CONTAINER 1: THE BACKEND ---
+  backend:
+    image: DOCKERHUB_USERNAME/webappme-backend:v1.0.0
+    # Instead of pulling an image from Docker Hub,
+    # build it from the Dockerfile found in ./backend/
+    build: ./backend
+    
+    # PORT MAPPING: "host:container"
+    # Your machine's port 3001 → container's port 3001
+    # This is how you reach it from your browser or frontend
+    ports:
+      - "3001:3001"
+
+  # --- CONTAINER 2: THE FRONTEND ---
+  frontend:
+    image: DOCKERHUB_USERNAME/webappme-frontend:v1.0.0
+    # Build it from the Dockerfile found in ./frontend/
+    build: ./frontend
+    
+    # Your machine's port 80 → container's port 80
+    # This is why you go to localhost:80 in your browser
+    ports:
+      - "80:80"
+    
+    # Mounts our custom Nginx configuration to replace the default one inside the container.
+    # This handles SPA routing (serving index.html on 404s) and acts as a reverse proxy,
+    # routing /login and /register API requests directly to the backend to avoid CORS issues.
+    volumes:
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+
+
+    # Start backend container FIRST, then start this one.
+    # Does NOT wait for backend to be "ready", just "started".
+    depends_on:
+      - backend
